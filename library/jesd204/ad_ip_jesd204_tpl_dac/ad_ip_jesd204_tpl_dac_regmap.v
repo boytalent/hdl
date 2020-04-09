@@ -25,6 +25,12 @@
 
 module ad_ip_jesd204_tpl_dac_regmap #(
   parameter ID = 0,
+  parameter DATAPATH_DISABLE = 0,
+  parameter IQCORRECTION_DISABLE = 1,
+  parameter FPGA_TECHNOLOGY = 0,
+  parameter FPGA_FAMILY = 0,
+  parameter SPEED_GRADE = 0,
+  parameter DEV_PACKAGE = 0,
   parameter NUM_CHANNELS = 2,
   parameter DATA_PATH_WIDTH = 16,
   parameter NUM_PROFILES = 1    // Number of supported JESD profiles
@@ -75,6 +81,10 @@ module ad_ip_jesd204_tpl_dac_regmap #(
   output [NUM_CHANNELS*16-1:0] dac_pat_data_0,
   output [NUM_CHANNELS*16-1:0] dac_pat_data_1,
 
+  output [NUM_CHANNELS-1:0]  dac_iqcor_enb,
+  output [NUM_CHANNELS*16-1:0] dac_iqcor_coeff_1,
+  output [NUM_CHANNELS*16-1:0] dac_iqcor_coeff_2,
+
   // Framer interface
   input [NUM_PROFILES*8-1: 0] jesd_m,
   input [NUM_PROFILES*8-1: 0] jesd_l,
@@ -116,14 +126,13 @@ module ad_ip_jesd204_tpl_dac_regmap #(
   // up bus interface
 
   up_axi #(
-    .AXI_ADDRESS_WIDTH (12),
-    .ADDRESS_WIDTH (10)
+    .AXI_ADDRESS_WIDTH (12)
   ) i_up_axi (
     .up_clk (up_clk),
     .up_rstn (up_rstn),
 
     .up_axi_awvalid (s_axi_awvalid),
-    .up_axi_awaddr ({4'b0,s_axi_awaddr}),
+    .up_axi_awaddr (s_axi_awaddr),
     .up_axi_awready (s_axi_awready),
     .up_axi_wvalid (s_axi_wvalid),
     .up_axi_wdata (s_axi_wdata),
@@ -133,7 +142,7 @@ module ad_ip_jesd204_tpl_dac_regmap #(
     .up_axi_bresp (s_axi_bresp),
     .up_axi_bready (s_axi_bready),
     .up_axi_arvalid (s_axi_arvalid),
-    .up_axi_araddr ({4'b0,s_axi_araddr}),
+    .up_axi_araddr (s_axi_araddr),
     .up_axi_arready (s_axi_arready),
     .up_axi_rvalid (s_axi_rvalid),
     .up_axi_rresp (s_axi_rresp),
@@ -176,6 +185,11 @@ module ad_ip_jesd204_tpl_dac_regmap #(
   up_dac_common #(
     .COMMON_ID(6'h0),
     .ID (ID),
+    .CONFIG((DATAPATH_DISABLE << 6) | (IQCORRECTION_DISABLE << 0)),
+    .FPGA_TECHNOLOGY (FPGA_TECHNOLOGY),
+    .FPGA_FAMILY (FPGA_FAMILY),
+    .SPEED_GRADE (SPEED_GRADE),
+    .DEV_PACKAGE (DEV_PACKAGE),
     .DRP_DISABLE (1),
     .USERPORTS_DISABLE (1),
     .GPIO_DISABLE (1)
@@ -227,10 +241,10 @@ module ad_ip_jesd204_tpl_dac_regmap #(
   genvar i;
   for (i = 0; i < NUM_CHANNELS; i = i + 1) begin: g_channel
     up_dac_channel #(
-      .COMMON_ID(6'h1),
-      .CHANNEL_ID (i),
+      .COMMON_ID(6'h1 + i/16),
+      .CHANNEL_ID (i % 16),
       .USERPORTS_DISABLE (1),
-      .IQCORRECTION_DISABLE (1)
+      .IQCORRECTION_DISABLE (IQCORRECTION_DISABLE)
     ) i_up_dac_channel (
       .dac_clk (link_clk),
       .dac_rst (dac_rst),
@@ -244,9 +258,9 @@ module ad_ip_jesd204_tpl_dac_regmap #(
       .dac_pat_data_2 (dac_pat_data_1[16*i+:16]),
       .dac_data_sel (dac_data_sel[4*i+:4]),
       .dac_iq_mode (),
-      .dac_iqcor_enb (),
-      .dac_iqcor_coeff_1 (),
-      .dac_iqcor_coeff_2 (),
+      .dac_iqcor_enb (dac_iqcor_enb[i]),
+      .dac_iqcor_coeff_1 (dac_iqcor_coeff_1[16*i+:16]),
+      .dac_iqcor_coeff_2 (dac_iqcor_coeff_2[16*i+:16]),
       .up_usr_datatype_be (),
       .up_usr_datatype_signed (),
       .up_usr_datatype_shift (),

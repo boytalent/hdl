@@ -14,8 +14,12 @@ GENERIC_DEPS += jesd204_rx_cgs.v
 GENERIC_DEPS += jesd204_rx_ctrl.v
 GENERIC_DEPS += jesd204_rx_lane.v
 
+XILINX_DEPS += error_monitor.v
 XILINX_DEPS += jesd204_rx_constr.ttcl
+XILINX_DEPS += jesd204_rx_ctrl_64b.v
+XILINX_DEPS += jesd204_rx_header.v
 XILINX_DEPS += jesd204_rx_ip.tcl
+XILINX_DEPS += jesd204_rx_lane_64b.v
 
 XILINX_DEPS += ../../jesd204/interfaces/jesd204_rx_cfg.xml
 XILINX_DEPS += ../../jesd204/interfaces/jesd204_rx_cfg_rtl.xml
@@ -30,11 +34,11 @@ XILINX_LIB_DEPS += jesd204/jesd204_common
 
 XILINX_INTERFACE_DEPS += jesd204/interfaces
 
-ALTERA_DEPS += ../jesd204_common/jesd204_eof_generator.v
-ALTERA_DEPS += ../jesd204_common/jesd204_lmfc.v
-ALTERA_DEPS += ../jesd204_common/jesd204_scrambler.v
-ALTERA_DEPS += ../jesd204_common/pipeline_stage.v
-ALTERA_DEPS += jesd204_rx_constr.sdc
-ALTERA_DEPS += jesd204_rx_hw.tcl
+INTEL_DEPS += ../jesd204_common/jesd204_eof_generator.v
+INTEL_DEPS += ../jesd204_common/jesd204_lmfc.v
+INTEL_DEPS += ../jesd204_common/jesd204_scrambler.v
+INTEL_DEPS += ../jesd204_common/pipeline_stage.v
+INTEL_DEPS += jesd204_rx_constr.sdc
+INTEL_DEPS += jesd204_rx_hw.tcl
 
 include ../../scripts/library.mk

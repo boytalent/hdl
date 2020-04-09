@@ -25,6 +25,10 @@
 
 module ad_ip_jesd204_tpl_dac #(
   parameter ID = 0,
+  parameter FPGA_TECHNOLOGY = 0,
+  parameter FPGA_FAMILY = 0,
+  parameter SPEED_GRADE = 0,
+  parameter DEV_PACKAGE = 0,
   parameter NUM_LANES = 4,
   parameter NUM_CHANNELS = 2,
   parameter SAMPLES_PER_FRAME = 1,
@@ -34,7 +38,8 @@ module ad_ip_jesd204_tpl_dac #(
   parameter DDS_TYPE = 1,
   parameter DDS_CORDIC_DW = 16,
   parameter DDS_CORDIC_PHASE_DW = 16,
-  parameter DATAPATH_DISABLE = 0
+  parameter DATAPATH_DISABLE = 0,
+  parameter IQCORRECTION_DISABLE = 1
 ) (
   // jesd interface
   // link_clk is (line-rate/40)
@@ -83,7 +88,7 @@ module ad_ip_jesd204_tpl_dac #(
 
   localparam DATA_PATH_WIDTH = OCTETS_PER_BEAT * 8 * NUM_LANES / NUM_CHANNELS / BITS_PER_SAMPLE;
   localparam LINK_DATA_WIDTH = NUM_LANES * OCTETS_PER_BEAT * 8;
-  localparam DMA_DATA_WIDTH = 16 * DATA_PATH_WIDTH * NUM_CHANNELS;
+  localparam DMA_DATA_WIDTH = BITS_PER_SAMPLE * DATA_PATH_WIDTH * NUM_CHANNELS;
 
   localparam BYTES_PER_FRAME = (NUM_CHANNELS * BITS_PER_SAMPLE * SAMPLES_PER_FRAME) / ( 8 * NUM_LANES);
 
@@ -101,11 +106,20 @@ module ad_ip_jesd204_tpl_dac #(
   wire [NUM_CHANNELS*16-1:0] dac_pat_data_0_s;
   wire [NUM_CHANNELS*16-1:0] dac_pat_data_1_s;
   wire [NUM_CHANNELS*4-1:0] dac_data_sel_s;
+  wire [NUM_CHANNELS-1:0]  dac_iqcor_enb;
+  wire [NUM_CHANNELS*16-1:0] dac_iqcor_coeff_1;
+  wire [NUM_CHANNELS*16-1:0] dac_iqcor_coeff_2;
 
   // regmap
 
   ad_ip_jesd204_tpl_dac_regmap #(
     .ID (ID),
+    .DATAPATH_DISABLE (DATAPATH_DISABLE),
+    .IQCORRECTION_DISABLE (IQCORRECTION_DISABLE),
+    .FPGA_TECHNOLOGY (FPGA_TECHNOLOGY),
+    .FPGA_FAMILY (FPGA_FAMILY),
+    .SPEED_GRADE (SPEED_GRADE),
+    .DEV_PACKAGE (DEV_PACKAGE),
     .NUM_CHANNELS (NUM_CHANNELS),
     .DATA_PATH_WIDTH (DATA_PATH_WIDTH),
     .NUM_PROFILES(1)
@@ -150,6 +164,10 @@ module ad_ip_jesd204_tpl_dac #(
     .dac_pat_data_1 (dac_pat_data_1_s),
     .dac_data_sel (dac_data_sel_s),
 
+    .dac_iqcor_enb (dac_iqcor_enb),
+    .dac_iqcor_coeff_1 (dac_iqcor_coeff_1),
+    .dac_iqcor_coeff_2 (dac_iqcor_coeff_2),
+
     .jesd_m (NUM_CHANNELS),
     .jesd_l (NUM_LANES),
     .jesd_s (SAMPLES_PER_FRAME),
@@ -163,8 +181,11 @@ module ad_ip_jesd204_tpl_dac #(
 
   ad_ip_jesd204_tpl_dac_core #(
     .DATAPATH_DISABLE (DATAPATH_DISABLE),
+    .IQCORRECTION_DISABLE (IQCORRECTION_DISABLE),
     .NUM_LANES (NUM_LANES),
     .NUM_CHANNELS (NUM_CHANNELS),
+    .BITS_PER_SAMPLE (BITS_PER_SAMPLE),
+    .CONVERTER_RESOLUTION (CONVERTER_RESOLUTION),
     .SAMPLES_PER_FRAME (SAMPLES_PER_FRAME),
     .OCTETS_PER_BEAT (OCTETS_PER_BEAT),
     .DATA_PATH_WIDTH (DATA_PATH_WIDTH),
@@ -196,7 +217,12 @@ module ad_ip_jesd204_tpl_dac #(
     .dac_dds_incr_1 (dac_dds_incr_1_s),
     .dac_pat_data_0 (dac_pat_data_0_s),
     .dac_pat_data_1 (dac_pat_data_1_s),
-    .dac_data_sel (dac_data_sel_s)
+    .dac_data_sel (dac_data_sel_s),
+
+    .dac_iqcor_enb (dac_iqcor_enb),
+    .dac_iqcor_coeff_1 (dac_iqcor_coeff_1),
+    .dac_iqcor_coeff_2 (dac_iqcor_coeff_2)
+
   );
 
 endmodule

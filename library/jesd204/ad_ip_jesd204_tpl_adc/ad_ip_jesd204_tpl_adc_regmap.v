@@ -25,6 +25,10 @@
 
 module ad_ip_jesd204_tpl_adc_regmap #(
   parameter ID = 0,
+  parameter FPGA_TECHNOLOGY = 0,
+  parameter FPGA_FAMILY = 0,
+  parameter SPEED_GRADE = 0,
+  parameter DEV_PACKAGE = 0,
   parameter NUM_CHANNELS = 1,
   parameter DATA_PATH_WIDTH = 1,
   parameter NUM_PROFILES = 1    // Number of supported JESD profiles
@@ -129,8 +133,7 @@ module ad_ip_jesd204_tpl_adc_regmap #(
   // up bus interface
 
   up_axi #(
-    .AXI_ADDRESS_WIDTH (12),
-    .ADDRESS_WIDTH (10)
+    .AXI_ADDRESS_WIDTH (12)
   ) i_up_axi (
     .up_clk (up_clk),
     .up_rstn (up_rstn),
@@ -194,6 +197,10 @@ module ad_ip_jesd204_tpl_adc_regmap #(
   up_adc_common #(
     .COMMON_ID (6'h0),
     .ID (ID),
+    .FPGA_TECHNOLOGY (FPGA_TECHNOLOGY),
+    .FPGA_FAMILY (FPGA_FAMILY),
+    .SPEED_GRADE (SPEED_GRADE),
+    .DEV_PACKAGE (DEV_PACKAGE),
     .DRP_DISABLE (1),
     .USERPORTS_DISABLE (1),
     .GPIO_DISABLE (1),
@@ -248,8 +255,8 @@ module ad_ip_jesd204_tpl_adc_regmap #(
   genvar i;
   for (i = 0; i < NUM_CHANNELS; i = i + 1) begin: g_channel
     up_adc_channel #(
-      .COMMON_ID (6'h1),
-      .CHANNEL_ID (i),
+      .COMMON_ID (6'h1 + i/16),
+      .CHANNEL_ID (i % 16),
       .USERPORTS_DISABLE (1),
       .DCFILTER_DISABLE (1),
       .IQCORRECTION_DISABLE (1)

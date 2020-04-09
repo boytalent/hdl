@@ -4,7 +4,6 @@
 add_instance axi_ad9361 axi_ad9361
 set_instance_parameter_value axi_ad9361 {ID} {0}
 set_instance_parameter_value axi_ad9361 {MODE_1R1T} {0}
-set_instance_parameter_value axi_ad9361 {DEVICE_TYPE} {1}
 set_instance_parameter_value axi_ad9361 {TDD_DISABLE} {0}
 set_instance_parameter_value axi_ad9361 {CMOS_OR_LVDS_N} {0}
 set_instance_parameter_value axi_ad9361 {ADC_DATAPATH_DISABLE} {0}
@@ -126,9 +125,7 @@ add_connection sys_dma_clk.clk axi_dac_dma.m_src_axi_clock
 add_connection sys_dma_clk.clk_reset axi_dac_dma.m_src_axi_reset
 add_connection sys_dma_clk.clk axi_dac_dma.if_m_axis_aclk
 
-add_connection util_dac_upack.if_s_axis_valid axi_dac_dma.if_m_axis_valid
-add_connection util_dac_upack.if_s_axis_ready axi_dac_dma.if_m_axis_ready
-add_connection util_dac_upack.if_s_axis_data axi_dac_dma.if_m_axis_data
+add_connection axi_dac_dma.m_axis util_dac_upack.s_axis
 
 # interrupts
 

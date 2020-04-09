@@ -43,19 +43,20 @@
 #
 
 source ../../scripts/adi_env.tcl
-source $ad_hdl_dir/library/scripts/adi_ip.tcl
+source $ad_hdl_dir/library/scripts/adi_ip_xilinx.tcl
 
 adi_ip_create axi_jesd204_tx
 adi_ip_files axi_jesd204_tx [list \
-  "../../xilinx/common/up_clock_mon_constr.xdc" \
   "../../common/up_axi.v" \
-  "../../common/up_clock_mon.v" \
   "axi_jesd204_tx_constr.xdc" \
+  "axi_jesd204_tx_ooc.ttcl" \
   "jesd204_up_tx.v" \
   "axi_jesd204_tx.v" \
 ]
 
 adi_ip_properties axi_jesd204_tx
+
+adi_ip_ttcl axi_jesd204_tx "axi_jesd204_tx_ooc.ttcl"
 
 set_property PROCESSING_ORDER LATE [ipx::get_files axi_jesd204_tx_constr.xdc \
   -of_objects [ipx::get_file_groups -of_objects [ipx::current_core] \
@@ -63,10 +64,9 @@ set_property PROCESSING_ORDER LATE [ipx::get_files axi_jesd204_tx_constr.xdc \
 
 adi_ip_add_core_dependencies { \
   analog.com:user:axi_jesd204_common:1.0 \
-  analog.com:user:util_cdc:1.0 \
 }
 
-set_property display_name "ADI JESD204B Transmit AXI Interface" [ipx::current_core]
+set_property display_name "ADI JESD204C Transmit AXI Interface" [ipx::current_core]
 set_property description "ADI JESD204B Transmit AXI Interface" [ipx::current_core]
 
 adi_add_bus "tx_cfg" "master" \
@@ -127,4 +127,28 @@ adi_add_bus_clock "core_clk" "tx_status:tx_event:tx_ilas_config:tx_cfg:tx_ctrl" 
 
 set_property DRIVER_VALUE "0" [ipx::get_ports "core_reset_ext"]
 
+adi_set_bus_dependency "tx_ilas_config" "tx_ilas_config" \
+	"(spirit:decode(id('MODELPARAM_VALUE.LINK_MODE')) = 1)"
+
+adi_set_bus_dependency "tx_ctrl" "tx_ctrl" \
+	"(spirit:decode(id('MODELPARAM_VALUE.LINK_MODE')) = 1)"
+
+set cc [ipx::current_core]
+set page0 [ipgui::get_pagespec -name "Page 0" -component $cc]
+
+# Link layer mode
+set p [ipgui::get_guiparamspec -name "LINK_MODE" -component $cc]
+ipgui::move_param -component $cc -order 0 $p -parent $page0
+set_property -dict [list \
+ "display_name" "Link Layer mode" \
+ "tooltip" "Link Layer mode" \
+ "widget" "comboBox" \
+] $p
+
+set_property -dict [list \
+  value_validation_type pairs \
+  value_validation_pairs {64B66B 2 8B10B 1} \
+] [ipx::get_user_parameters $p -of_objects $cc]
+
+ipx::create_xgui_files [ipx::current_core]
 ipx::save_core [ipx::current_core]

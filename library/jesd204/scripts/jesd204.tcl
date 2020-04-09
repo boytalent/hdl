@@ -42,10 +42,10 @@
 # is copyright © 2016-2017, Analog Devices, Inc.”
 #
 
-proc adi_axi_jesd204_tx_create {ip_name num_lanes {num_links 1}} {
+proc adi_axi_jesd204_tx_create {ip_name num_lanes {num_links 1} {link_mode 1}} {
 
-  if {$num_lanes < 1 || $num_lanes > 8} {
-    return -code 1 "ERROR: Invalid number of JESD204B lanes. (Supported range 1-8)"
+  if {$num_lanes < 1 || $num_lanes > 16} {
+    return -code 1 "ERROR: Invalid number of JESD204B lanes. (Supported range 1-16)"
   }
 
   if {$num_links < 1 || $num_links > 8} {
@@ -63,15 +63,17 @@ proc adi_axi_jesd204_tx_create {ip_name num_lanes {num_links 1}} {
 
     ad_ip_parameter "${ip_name}/tx_axi" CONFIG.NUM_LANES $num_lanes
     ad_ip_parameter "${ip_name}/tx_axi" CONFIG.NUM_LINKS $num_links
+    ad_ip_parameter "${ip_name}/tx_axi" CONFIG.LINK_MODE $link_mode
     ad_ip_parameter "${ip_name}/tx"     CONFIG.NUM_LANES $num_lanes
     ad_ip_parameter "${ip_name}/tx"     CONFIG.NUM_LINKS $num_links
+    ad_ip_parameter "${ip_name}/tx"     CONFIG.LINK_MODE $link_mode
 
     ad_connect "${ip_name}/tx_axi/core_reset" "${ip_name}/tx/reset"
-    ad_connect "${ip_name}/tx_axi/tx_ctrl" "${ip_name}/tx/tx_ctrl"
+    if {$link_mode == 1} {ad_connect "${ip_name}/tx_axi/tx_ctrl" "${ip_name}/tx/tx_ctrl"}
     ad_connect "${ip_name}/tx_axi/tx_cfg" "${ip_name}/tx/tx_cfg"
     ad_connect "${ip_name}/tx/tx_event" "${ip_name}/tx_axi/tx_event"
     ad_connect "${ip_name}/tx/tx_status" "${ip_name}/tx_axi/tx_status"
-    ad_connect "${ip_name}/tx/tx_ilas_config" "${ip_name}/tx_axi/tx_ilas_config"
+    if {$link_mode == 1} {ad_connect "${ip_name}/tx/tx_ilas_config" "${ip_name}/tx_axi/tx_ilas_config"}
 
     # Control interface
     create_bd_pin -dir I -type clk "${ip_name}/s_axi_aclk"
@@ -86,14 +88,14 @@ proc adi_axi_jesd204_tx_create {ip_name num_lanes {num_links 1}} {
 
     # JESD204 processing
     create_bd_pin -dir I -type clk "${ip_name}/device_clk"
-    create_bd_pin -dir I -from [expr $num_links - 1] -to 0 "${ip_name}/sync"
+    if {$link_mode == 1} {create_bd_pin -dir I -from [expr $num_links - 1] -to 0 "${ip_name}/sync"}
     create_bd_pin -dir I "${ip_name}/sysref"
 
     create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 "${ip_name}/tx_data"
 
     ad_connect "${ip_name}/device_clk" "${ip_name}/tx_axi/core_clk"
     ad_connect "${ip_name}/device_clk" "${ip_name}/tx/clk"
-    ad_connect "${ip_name}/sync" "${ip_name}/tx/sync"
+    if {$link_mode == 1} {ad_connect "${ip_name}/sync" "${ip_name}/tx/sync"}
     ad_connect "${ip_name}/sysref" "${ip_name}/tx/sysref"
     ad_connect "${ip_name}/tx_data" "${ip_name}/tx/tx_data"
 
@@ -114,10 +116,10 @@ proc adi_axi_jesd204_tx_create {ip_name num_lanes {num_links 1}} {
   return -options $resultoptions $resulttext
 }
 
-proc adi_axi_jesd204_rx_create {ip_name num_lanes {num_links 1}} {
+proc adi_axi_jesd204_rx_create {ip_name num_lanes {num_links 1} {link_mode 1}} {
 
-  if {$num_lanes < 1 || $num_lanes > 8} {
-    return -code 1 "ERROR: Invalid number of JESD204B lanes. (Supported range 1-8)"
+  if {$num_lanes < 1 || $num_lanes > 16} {
+    return -code 1 "ERROR: Invalid number of JESD204B lanes. (Supported range 1-16)"
   }
 
   if {$num_links < 1 || $num_links > 8} {
@@ -135,14 +137,16 @@ proc adi_axi_jesd204_rx_create {ip_name num_lanes {num_links 1}} {
 
     ad_ip_parameter "${ip_name}/rx_axi" CONFIG.NUM_LANES $num_lanes
     ad_ip_parameter "${ip_name}/rx_axi" CONFIG.NUM_LINKS $num_links
+    ad_ip_parameter "${ip_name}/rx_axi" CONFIG.LINK_MODE $link_mode
     ad_ip_parameter "${ip_name}/rx"     CONFIG.NUM_LANES $num_lanes
     ad_ip_parameter "${ip_name}/rx"     CONFIG.NUM_LINKS $num_links
+    ad_ip_parameter "${ip_name}/rx"     CONFIG.LINK_MODE $link_mode
 
     ad_connect "${ip_name}/rx_axi/core_reset" "${ip_name}/rx/reset"
     ad_connect "${ip_name}/rx_axi/rx_cfg" "${ip_name}/rx/rx_cfg"
     ad_connect "${ip_name}/rx/rx_event" "${ip_name}/rx_axi/rx_event"
     ad_connect "${ip_name}/rx/rx_status" "${ip_name}/rx_axi/rx_status"
-    ad_connect "${ip_name}/rx/rx_ilas_config" "${ip_name}/rx_axi/rx_ilas_config"
+    if {$link_mode == 1} {ad_connect "${ip_name}/rx/rx_ilas_config" "${ip_name}/rx_axi/rx_ilas_config"}
 
     # Control interface
     create_bd_pin -dir I -type clk "${ip_name}/s_axi_aclk"
@@ -157,9 +161,9 @@ proc adi_axi_jesd204_rx_create {ip_name num_lanes {num_links 1}} {
 
     # JESD204 processing
     create_bd_pin -dir I -type clk "${ip_name}/device_clk"
-    create_bd_pin -dir O -from [expr $num_links - 1] -to 0 "${ip_name}/sync"
+    if {$link_mode == 1} {create_bd_pin -dir O -from [expr $num_links - 1] -to 0 "${ip_name}/sync"}
     create_bd_pin -dir I "${ip_name}/sysref"
-    create_bd_pin -dir O "${ip_name}/phy_en_char_align"
+    if {$link_mode == 1} {create_bd_pin -dir O "${ip_name}/phy_en_char_align"}
 #    create_bd_pin -dir I "${ip_name}/phy_ready"
     create_bd_pin -dir O -from 3 -to 0 "${ip_name}/rx_eof"
     create_bd_pin -dir O -from 3 -to 0 "${ip_name}/rx_sof"
@@ -170,10 +174,10 @@ proc adi_axi_jesd204_rx_create {ip_name num_lanes {num_links 1}} {
 
     ad_connect "${ip_name}/device_clk" "${ip_name}/rx_axi/core_clk"
     ad_connect "${ip_name}/device_clk" "${ip_name}/rx/clk"
-    ad_connect "${ip_name}/rx/sync" "${ip_name}/sync"
+    if {$link_mode == 1} {ad_connect "${ip_name}/rx/sync" "${ip_name}/sync"}
     ad_connect "${ip_name}/sysref" "${ip_name}/rx/sysref"
 #    ad_connect "${ip_name}/phy_ready" "${ip_name}/rx/phy_ready"
-    ad_connect "${ip_name}/rx/phy_en_char_align" "${ip_name}/phy_en_char_align"
+    if {$link_mode == 1} {ad_connect "${ip_name}/rx/phy_en_char_align" "${ip_name}/phy_en_char_align"}
     ad_connect "${ip_name}/rx/rx_data" "${ip_name}/rx_data_tdata"
     ad_connect "${ip_name}/rx/rx_valid" "${ip_name}/rx_data_tvalid"
     ad_connect "${ip_name}/rx/rx_eof" "${ip_name}/rx_eof"
@@ -200,12 +204,11 @@ proc adi_axi_jesd204_rx_create {ip_name num_lanes {num_links 1}} {
 
 
 #                                       L            M                 S                 N & NP
-proc adi_tpl_jesd204_tx_create {ip_name num_of_lanes num_of_converters samples_per_frame sample_width} {
+proc adi_tpl_jesd204_tx_create {ip_name num_of_lanes num_of_converters samples_per_frame sample_width {link_layer_bytes_per_beat 4}} {
 
-  set link_layer_bytes_per_beat 4
 
-  if {$num_of_lanes < 1 || $num_of_lanes > 8} {
-    return -code 1 "ERROR: Invalid number of JESD204B lanes. (Supported range 1-8)"
+  if {$num_of_lanes < 1 || $num_of_lanes > 16} {
+    return -code 1 "ERROR: Invalid number of JESD204B lanes. (Supported range 1-16)"
   }
   # F = (M * N * S) / (L * 8)
   set bytes_per_frame [expr ($num_of_converters * $sample_width * $samples_per_frame) / ($num_of_lanes * 8)];
@@ -249,24 +252,25 @@ proc adi_tpl_jesd204_tx_create {ip_name num_of_lanes num_of_converters samples_p
       OCTETS_PER_BEAT $tpl_bytes_per_beat \
      ]
 
-    # Concatenation and slicer cores
-    ad_ip_instance xlconcat "${ip_name}/data_concat" [list \
-      NUM_PORTS $num_of_converters \
-    ]
+    if {$num_of_converters > 1} {
+      # Concatenation and slicer cores
+      ad_ip_instance xlconcat "${ip_name}/data_concat" [list \
+        NUM_PORTS $num_of_converters \
+      ]
 
-    for {set i 0} {$i < $num_of_converters} {incr i} {
-      ad_ip_instance xlslice "${ip_name}/enable_slice_${i}" [list \
-        DIN_WIDTH $num_of_converters \
-        DIN_FROM $i \
-        DIN_TO $i \
-      ]
-      ad_ip_instance xlslice "${ip_name}/valid_slice_${i}" [list \
-        DIN_WIDTH $num_of_converters \
-        DIN_FROM $i \
-        DIN_TO $i \
-      ]
+      for {set i 0} {$i < $num_of_converters} {incr i} {
+        ad_ip_instance xlslice "${ip_name}/enable_slice_${i}" [list \
+          DIN_WIDTH $num_of_converters \
+          DIN_FROM $i \
+          DIN_TO $i \
+        ]
+        ad_ip_instance xlslice "${ip_name}/valid_slice_${i}" [list \
+          DIN_WIDTH $num_of_converters \
+          DIN_FROM $i \
+          DIN_TO $i \
+        ]
+      }
     }
-
     # Create connections
     # TPL configuration interface
     ad_connect "${ip_name}/s_axi_aclk" "${ip_name}/tpl_core/s_axi_aclk"
@@ -278,16 +282,22 @@ proc adi_tpl_jesd204_tx_create {ip_name num_of_lanes num_of_converters samples_p
     ad_connect ${ip_name}/tpl_core/link ${ip_name}/link
 
     # TPL - app layer
-    for {set i 0} {$i < $num_of_converters} {incr i} {
-      ad_connect ${ip_name}/tpl_core/enable ${ip_name}/enable_slice_$i/Din
-      ad_connect ${ip_name}/tpl_core/dac_valid ${ip_name}/valid_slice_$i/Din
+    if {$num_of_converters > 1} {
+      for {set i 0} {$i < $num_of_converters} {incr i} {
+        ad_connect ${ip_name}/tpl_core/enable ${ip_name}/enable_slice_$i/Din
+        ad_connect ${ip_name}/tpl_core/dac_valid ${ip_name}/valid_slice_$i/Din
 
-      ad_connect ${ip_name}/enable_slice_$i/Dout ${ip_name}/dac_enable_$i
-      ad_connect ${ip_name}/valid_slice_$i/Dout ${ip_name}/dac_valid_$i
-      ad_connect ${ip_name}/dac_data_$i ${ip_name}/data_concat/In$i
+        ad_connect ${ip_name}/enable_slice_$i/Dout ${ip_name}/dac_enable_$i
+        ad_connect ${ip_name}/valid_slice_$i/Dout ${ip_name}/dac_valid_$i
+        ad_connect ${ip_name}/dac_data_$i ${ip_name}/data_concat/In$i
 
+      }
+      ad_connect ${ip_name}/data_concat/dout ${ip_name}/tpl_core/dac_ddata
+    } else {
+      ad_connect ${ip_name}/dac_data_0 ${ip_name}/tpl_core/dac_ddata
+      ad_connect ${ip_name}/tpl_core/enable ${ip_name}/dac_enable_0
+      ad_connect ${ip_name}/tpl_core/dac_valid ${ip_name}/dac_valid_0
     }
-    ad_connect ${ip_name}/data_concat/dout ${ip_name}/tpl_core/dac_ddata
     ad_connect ${ip_name}/dac_dunf ${ip_name}/tpl_core/dac_dunf
 
   } resulttext resultoptions]
@@ -305,12 +315,11 @@ proc adi_tpl_jesd204_tx_create {ip_name num_of_lanes num_of_converters samples_p
 
 
 #                                       L            M                 S                 N & NP
-proc adi_tpl_jesd204_rx_create {ip_name num_of_lanes num_of_converters samples_per_frame sample_width} {
+proc adi_tpl_jesd204_rx_create {ip_name num_of_lanes num_of_converters samples_per_frame sample_width {link_layer_bytes_per_beat 4}} {
 
-  set link_layer_bytes_per_beat 4
 
-  if {$num_of_lanes < 1 || $num_of_lanes > 8} {
-    return -code 1 "ERROR: Invalid number of JESD204B lanes. (Supported range 1-8)"
+  if {$num_of_lanes < 1 || $num_of_lanes > 16} {
+    return -code 1 "ERROR: Invalid number of JESD204B lanes. (Supported range 1-16)"
   }
   # F = (M * N * S) / (L * 8)
   set bytes_per_frame [expr ($num_of_converters * $sample_width * $samples_per_frame) / ($num_of_lanes * 8)];
@@ -357,24 +366,26 @@ proc adi_tpl_jesd204_rx_create {ip_name num_of_lanes num_of_converters samples_p
       OCTETS_PER_BEAT $tpl_bytes_per_beat \
      ]
 
-    # Slicer cores
-    for {set i 0} {$i < $num_of_converters} {incr i} {
-      ad_ip_instance xlslice ${ip_name}/data_slice_$i [list \
-        DIN_WIDTH [expr $sample_width*$samples_per_channel*$num_of_converters] \
-        DIN_FROM [expr $sample_width*$samples_per_channel*($i+1)-1] \
-        DIN_TO [expr $sample_width*$samples_per_channel*$i] \
-      ]
+    if {$num_of_converters > 1} {
+      # Slicer cores
+      for {set i 0} {$i < $num_of_converters} {incr i} {
+        ad_ip_instance xlslice ${ip_name}/data_slice_$i [list \
+          DIN_WIDTH [expr $sample_width*$samples_per_channel*$num_of_converters] \
+          DIN_FROM [expr $sample_width*$samples_per_channel*($i+1)-1] \
+          DIN_TO [expr $sample_width*$samples_per_channel*$i] \
+        ]
 
-      ad_ip_instance xlslice "${ip_name}/enable_slice_${i}" [list \
-        DIN_WIDTH $num_of_converters \
-        DIN_FROM $i \
-        DIN_TO $i \
-      ]
-      ad_ip_instance xlslice "${ip_name}/valid_slice_${i}" [list \
-        DIN_WIDTH $num_of_converters \
-        DIN_FROM $i \
-        DIN_TO $i \
-      ]
+        ad_ip_instance xlslice "${ip_name}/enable_slice_${i}" [list \
+          DIN_WIDTH $num_of_converters \
+          DIN_FROM $i \
+          DIN_TO $i \
+        ]
+        ad_ip_instance xlslice "${ip_name}/valid_slice_${i}" [list \
+          DIN_WIDTH $num_of_converters \
+          DIN_FROM $i \
+          DIN_TO $i \
+        ]
+      }
     }
 
     # Create connections
@@ -391,15 +402,21 @@ proc adi_tpl_jesd204_rx_create {ip_name num_of_lanes num_of_converters samples_p
     ad_connect ${ip_name}/tpl_core/link_valid ${ip_name}/link_valid
 
     # TPL - app layer
-    for {set i 0} {$i < $num_of_converters} {incr i} {
-      ad_connect ${ip_name}/tpl_core/adc_data ${ip_name}/data_slice_$i/Din
-      ad_connect ${ip_name}/tpl_core/enable ${ip_name}/enable_slice_$i/Din
-      ad_connect ${ip_name}/tpl_core/adc_valid ${ip_name}/valid_slice_$i/Din
+    if {$num_of_converters > 1} {
+      for {set i 0} {$i < $num_of_converters} {incr i} {
+        ad_connect ${ip_name}/tpl_core/adc_data ${ip_name}/data_slice_$i/Din
+        ad_connect ${ip_name}/tpl_core/enable ${ip_name}/enable_slice_$i/Din
+        ad_connect ${ip_name}/tpl_core/adc_valid ${ip_name}/valid_slice_$i/Din
 
-      ad_connect ${ip_name}/data_slice_$i/Dout ${ip_name}/adc_data_$i
-      ad_connect ${ip_name}/enable_slice_$i/Dout ${ip_name}/adc_enable_$i
-      ad_connect ${ip_name}/valid_slice_$i/Dout ${ip_name}/adc_valid_$i
+        ad_connect ${ip_name}/data_slice_$i/Dout ${ip_name}/adc_data_$i
+        ad_connect ${ip_name}/enable_slice_$i/Dout ${ip_name}/adc_enable_$i
+        ad_connect ${ip_name}/valid_slice_$i/Dout ${ip_name}/adc_valid_$i
 
+      }
+    } else {
+      ad_connect ${ip_name}/tpl_core/adc_data ${ip_name}/adc_data_0
+      ad_connect ${ip_name}/tpl_core/enable ${ip_name}/adc_enable_0
+      ad_connect ${ip_name}/tpl_core/adc_valid ${ip_name}/adc_valid_0
     }
     ad_connect ${ip_name}/adc_dovf ${ip_name}/tpl_core/adc_dovf
 

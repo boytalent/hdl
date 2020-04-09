@@ -22,7 +22,7 @@
 # ***************************************************************************
 
 source ../../scripts/adi_env.tcl
-source $ad_hdl_dir/library/scripts/adi_ip.tcl
+source $ad_hdl_dir/library/scripts/adi_ip_xilinx.tcl
 
 adi_ip_create ad_ip_jesd204_tpl_adc
 adi_ip_files ad_ip_jesd204_tpl_adc [list \
@@ -52,6 +52,9 @@ adi_ip_files ad_ip_jesd204_tpl_adc [list \
 
 adi_ip_properties ad_ip_jesd204_tpl_adc
 
+adi_init_bd_tcl
+adi_ip_bd ad_ip_jesd204_tpl_adc "bd/bd.tcl"
+
 set cc [ipx::current_core]
 
 set_property display_name "JESD204 Transport Layer for ADCs" $cc
@@ -68,10 +71,10 @@ adi_add_bus "link" "master" \
 adi_add_bus_clock "link_clk" "link"
 
 foreach {p v} {
-  "NUM_LANES" "1 2 3 4 8" \
-  "NUM_CHANNELS" "1 2 4 6 8" \
-  "BITS_PER_SAMPLE" "12 16" \
-  "CONVERTER_RESOLUTION" "11 12 16" \
+  "NUM_LANES" "1 2 3 4 8 16" \
+  "NUM_CHANNELS" "1 2 4 6 8 16 32" \
+  "BITS_PER_SAMPLE" "8 12 16" \
+  "CONVERTER_RESOLUTION" "8 11 12 16" \
   "SAMPLES_PER_FRAME" "1 2 3 4 6 8 12 16" \
   "OCTETS_PER_BEAT" "4 8" \
 } { \
@@ -130,6 +133,8 @@ foreach {k v w} {
   ] $p
   incr i
 }
+
+adi_add_auto_fpga_spec_params
 
 ipx::create_xgui_files [ipx::current_core]
 ipx::save_core [ipx::current_core]

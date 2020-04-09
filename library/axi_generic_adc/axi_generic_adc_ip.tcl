@@ -1,10 +1,11 @@
 # ip
 
 source ../scripts/adi_env.tcl
-source $ad_hdl_dir/library/scripts/adi_ip.tcl
+source $ad_hdl_dir/library/scripts/adi_ip_xilinx.tcl
 
 adi_ip_create axi_generic_adc
 adi_ip_files axi_generic_adc [list \
+  "$ad_hdl_dir/library/xilinx/common/ad_rst_constr.xdc" \
   "$ad_hdl_dir/library/common/ad_rst.v" \
   "$ad_hdl_dir/library/common/up_axi.v" \
   "$ad_hdl_dir/library/common/up_xfer_cntrl.v" \
@@ -16,6 +17,8 @@ adi_ip_files axi_generic_adc [list \
 ]
 
 adi_ip_properties axi_generic_adc
+
+ipx::infer_bus_interface adc_clk xilinx.com:signal:clock_rtl:1.0 [ipx::current_core]
 
 ipx::save_core [ipx::current_core]
 

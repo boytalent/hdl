@@ -22,7 +22,7 @@
 # ***************************************************************************
 
 source ../../scripts/adi_env.tcl
-source $ad_hdl_dir/library/scripts/adi_ip.tcl
+source $ad_hdl_dir/library/scripts/adi_ip_xilinx.tcl
 
 adi_ip_create util_upack2
 adi_ip_files util_upack2 [list \
@@ -47,7 +47,7 @@ adi_add_bus_clock "clk" "s_axis" "reset"
 
 set cc [ipx::current_core]
 
-for {set i 1} {$i < 16} {incr i} {
+for {set i 1} {$i < 32} {incr i} {
   set_property enablement_dependency "spirit:decode(id('MODELPARAM_VALUE.NUM_OF_CHANNELS')) > $i" \
     [ipx::get_ports *_$i -of_objects $cc]
 }
